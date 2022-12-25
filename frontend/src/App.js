@@ -13,7 +13,7 @@ import FooterComponent from "./components/FooterComponent";
 import HeaderComponent from "./components/HeaderComponent";
 
 //user components
-import RoutesWithUserChatComponent from "./components/RoutesWithUserChatComponent";
+import RoutesWithUserChatComponent from "./components/user/RoutesWithUserChatComponent";
 
 // protected user pages
 import UserProfilePage from "./pages/user/UserProfilePage";
