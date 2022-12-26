@@ -13,7 +13,8 @@ const LoginPage = () => {
 
     const reduxDispatch = useDispatch();
   
-  return <LoginPageComponent loginUserApiRequest={loginUserApiRequest} reduxDispatch={reduxDispatch} setReduxUserState={setReduxUserState} />
+  return <LoginPageComponent loginUserApiRequest={loginUserApiRequest}
+  reduxDispatch={reduxDispatch} setReduxUserState={setReduxUserState} />
 };
 
 export default LoginPage;
