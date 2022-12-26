@@ -23,7 +23,7 @@ const LoginPageComponent = ({ loginUserApiRequest,reduxDispatch, setReduxUserSta
     const doNotLogout = form.doNotLogout.checked;
 
     if (event.currentTarget.checkValidity() === true && email && password) {
-        setLoginUserResponseState({ loading: true });
+      setLoginUserResponseState({ loading: true });
       loginUserApiRequest(email, password, doNotLogout)
         .then((res) => {
             setLoginUserResponseState({ success: res.success, loading: false, error: "" });
@@ -32,8 +32,10 @@ const LoginPageComponent = ({ loginUserApiRequest,reduxDispatch, setReduxUserSta
                 reduxDispatch(setReduxUserState(res.userLoggedIn));
             }
 
-            if (res.success === "user logged in" && !res.userLoggedIn.isAdmin) window.location.href = "/user"
-            else window.location.href = "/admin/orders"
+            if (res.success === "user logged in" && !(res.userLoggedIn.isAdmin))
+            window.location.href='/user'
+            else
+            window.location.href='/admin/orders'
 
         })
         .catch((er) =>
