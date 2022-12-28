@@ -11,7 +11,7 @@ const RegisterPageComponent = ({
   const [registerUserResponseState, setRegisterUserResponseState] = useState({
     success: "",
     error: "",
-    loading: false,
+    loading: false
   });
 
   const [passwordsMatchState, setPasswordsMatchState]=useState(true)
