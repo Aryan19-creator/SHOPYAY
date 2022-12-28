@@ -67,7 +67,7 @@ const loginUser = async(req,res,next)=>{
                 cookieParams = {...cookieParams, maxAge: 1000*60*60*24*7}
                 //for the next 7 days i'll be logged in
             }
-            return res.cookie("access_token", generateAuthToken(user._id, user._name, user.lastName,
+            return res.cookie("access_token", generateAuthToken(user._id, user.name, user.lastName,
                 user.email, user.isAdmin), cookieParams).json({
                     success: "user logged in",
                     userLoggedIn: {_id:user._id, name: user.name, lastName: user.lastName,
