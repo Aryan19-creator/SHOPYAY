@@ -3,14 +3,19 @@ import { useState } from "react";
 
 const UserProfilePageComponent = ({ updateUserApiRequest }) => {
   const [validated, setValidated] = useState(false);
+  const [updateUserResponseState, setUpdateUserResponseState]=useState({
+    success: "", error: ""
+  })
+  const [passwordsMatchState, setPasswordsMatchState]=useState(true)
 
   const onChange = () => {
     const password = document.querySelector("input[name=password]");
-    const confirm = document.querySelector("input[name=confirmPassword]");
-    if (confirm.value === password.value) {
-      confirm.setCustomValidity("");
+    const confirmPassword = document.querySelector("input[name=confirmPassword]");
+    if (confirmPassword.value === password.value) {
+      setPasswordsMatchState(true)
     } else {
-      confirm.setCustomValidity("Passwords do not match");
+        setPasswordsMatchState(false)
+
     }
   };
 
@@ -31,8 +36,10 @@ const UserProfilePageComponent = ({ updateUserApiRequest }) => {
 
     if (event.currentTarget.checkValidity() === true && form.password.value === form.confirmPassword.value) {
         updateUserApiRequest(name, lastName, phoneNumber, address, country, zipCode, city, state, password).then(data => {
-            console.log(data);
+            setUpdateUserResponseState({success: data.success, error: ""})
         })
+        .catch((er)=> setUpdateUserResponseState({error: er.response.data.message
+        ?er.response.data.message : er.response.data}))
     }
 
     setValidated(true);
@@ -137,6 +144,7 @@ const UserProfilePageComponent = ({ updateUserApiRequest }) => {
                 placeholder="Password"
                 minLength={6}
                 onChange={onChange}
+                isInvalid = {!passwordsMatchState}
               />
               <Form.Control.Feedback type="invalid">
                 Please anter a valid password
@@ -154,6 +162,7 @@ const UserProfilePageComponent = ({ updateUserApiRequest }) => {
                 placeholder="Repeat Password"
                 minLength={6}
                 onChange={onChange}
+                isInvalid={!passwordsMatchState}
               />
               <Form.Control.Feedback type="invalid">
                 Both passwords should match
@@ -163,10 +172,10 @@ const UserProfilePageComponent = ({ updateUserApiRequest }) => {
             <Button variant="primary" type="submit">
               Update
             </Button>
-            <Alert show={true} variant="danger">
-              User with that email already exists!
+            <Alert show={updateUserResponseState && updateUserResponseState.error!==""} variant="danger">
+              something went wrong
             </Alert>
-            <Alert show={true} variant="info">
+            <Alert show={updateUserResponseState && updateUserResponseState.success==="user updated"} variant="info">
               User updated
             </Alert>
           </Form>
