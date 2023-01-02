@@ -3,11 +3,11 @@ import {  combineReducers, applyMiddleware } from "redux";
 import { composeWithDevTools } from "redux-devtools-extension";
 import thunk from "redux-thunk";
 
-import { counterReducer } from "./reducers/cartReducers";
+import { cartReducer } from "./reducers/cartReducers";
 import { userRegisterLoginReducer } from './reducers/userReducers';
 
 const reducer = combineReducers({
-    cart: counterReducer,
+    cart: cartReducer,
     userRegisterLogin: userRegisterLoginReducer 
 })
 
@@ -19,7 +19,7 @@ const userInfoInLocalStorage = localStorage.getItem("userInfo")
 
 const INITIAL_STATE = {
     cart: {
-       value: 0, 
+       
     },
     userRegisterLogin: { userInfo: userInfoInLocalStorage }
 }
