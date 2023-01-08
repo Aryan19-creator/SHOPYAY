@@ -1,2 +1,2 @@
-# E-Commerce-App
+# SHOPYAY!
 E-Commerce App using MERN Stack.
