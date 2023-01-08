@@ -34,28 +34,10 @@ import {
       error: "",
     });
     const [attributesFromDb, setAttributesFromDb] = useState([]);
-  
-      const attrVal = useRef(null);
-      const attrKey = useRef(null);
-  
-      const setValuesForAttrFromDbSelectForm = (e) => {
-          if (e.target.value !== "Choose attribute") {
-              var selectedAttr = attributesFromDb.find((item) => item.key === e.target.value);
-              let valuesForAttrKeys = attrVal.current;
-              if (selectedAttr && selectedAttr.value.length > 0) {
-                  while (valuesForAttrKeys.options.length) {
-                      valuesForAttrKeys.remove(0);
-                  }
-                  valuesForAttrKeys.options.add(new Option("Choose attribute value"));
-                  selectedAttr.value.map(item => {
-                      valuesForAttrKeys.add(new Option(item));
-                      return "";
-                  })
-              }
-          }
-      }
-      
-  
+
+    const attrVal=useRef(null);
+    const attrKey=useRef(null);
+
     const { id } = useParams();
   
     const navigate = useNavigate();
@@ -199,8 +181,7 @@ import {
                       <Form.Select
                         name="atrrKey"
                         aria-label="Default select example"
-                        ref={attrKey}
-                        onChange={setValuesForAttrFromDbSelectForm}
+                        ref={attrkey}
                       >
                         <option>Choose attribute</option>
                         {attributesFromDb.map((item, idx) => (
@@ -220,7 +201,6 @@ import {
                       <Form.Select
                         name="atrrVal"
                         aria-label="Default select example"
-                        ref={attrVal}
                       >
                         <option>Choose attribute value</option>
                       </Form.Select>
