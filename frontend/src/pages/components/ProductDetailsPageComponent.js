@@ -19,12 +19,16 @@ import { useParams } from "react-router-dom";
 
 
 
-const ProductDetailsPageComponent = ({ addToCartReduxAction, reduxDispatch }) => {
+
+const ProductDetailsPageComponent = ({ addToCartReduxAction, reduxDispatch, getProductDetails }) => {
     
 
     const {id} = useParams()
     const [quantity, setQuantity] = useState(1);
     const [showCartMessage, setShowCartMessage] = useState(false);
+    const [product,setProduct]=useState([]);
+    const [loading, setLoading]=useState(true);
+    const [error, setError]=useState(false);
 
     const addToCartHandler = () => {
         reduxDispatch(addToCartReduxAction(id, quantity));
@@ -45,11 +49,27 @@ const ProductDetailsPageComponent = ({ addToCartReduxAction, reduxDispatch }) =>
     new ImageZoom(document.getElementById("third"), options);
     new ImageZoom(document.getElementById("fourth"), options);
   });
+
+  useEffect(()=>{
+    getProductDetails(id)
+    .then(data=>{
+      setProduct(data);
+      setLoading(false);
+    })
+    .catch((er)=>setError(er.response.data.message?er.response.data.message:
+      er.response.data));
+  }, [])
   return (
     <Container>
       <AddedToCartMessageComponent showCartMessage={showCartMessage} setShowCartMessage={setShowCartMessage} />
       <Row className="mt-5">
-        <Col style={{ zIndex: 1 }} md={4}>
+        {loading ? (
+          <h2>Loading product details..</h2>
+        ) :error?(
+          <h2>{error}</h2>
+        ):(
+          <>
+          <Col style={{ zIndex: 1 }} md={4}>
           <div id="first">
             <Image
               crossOrigin="anonymous"
@@ -76,25 +96,24 @@ const ProductDetailsPageComponent = ({ addToCartReduxAction, reduxDispatch }) =>
             <Col md={8}>
               <ListGroup variant="flush">
                 <ListGroup.Item>
-                  <h1>Product name</h1>
+                  <h1>{product.name} </h1>
                 </ListGroup.Item>
                 <ListGroup.Item>
-                  <Rating readonly size={20} initialValue={4} /> (1)
+                  <Rating readonly size={20} initialValue={product.rating} /> ({product.reviewsNumber})
                 </ListGroup.Item>
                 <ListGroup.Item>
-                  Price <span className="fw-bold">$345</span>
+                  Price <span className="fw-bold">{product.price} </span>
                 </ListGroup.Item>
                 <ListGroup.Item>
-                  Porta ac consectetur ac Lorem ipsum dolor, sit amet
-                  consectetur adipisicing elit. Perferendis, illo.
+                  {product.description}
                 </ListGroup.Item>
               </ListGroup>
             </Col>
             <Col md={4}>
               <ListGroup>
-                <ListGroup.Item>Status: in stock</ListGroup.Item>
+                <ListGroup.Item>Status:{product.count > 0 ? "in stock":"out of stock"} </ListGroup.Item>
                 <ListGroup.Item>
-                  Price: <span className="fw-bold">$345</span>
+                  Price: <span className="fw-bold">{product.price} </span>
                 </ListGroup.Item>
                 <ListGroup.Item>
                   Quantity:
@@ -148,6 +167,10 @@ const ProductDetailsPageComponent = ({ addToCartReduxAction, reduxDispatch }) =>
             </Button>
           </Form>
         </Col>
+          </>
+
+        )}
+        
       </Row>
     </Container>
   );
