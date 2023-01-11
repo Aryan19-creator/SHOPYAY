@@ -9,15 +9,32 @@ import {
   Alert,
 } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { changeCategory, setValuesForAttrFromDbSelectForm, setAttributesTableWrapper } from "./utils/utils";
 
-const CreateProductPageComponent = ({ createProductApiRequest, uploadImagesApiRequest, uploadImagesCloudinaryApiRequest }) => {
+const CreateProductPageComponent = ({
+  createProductApiRequest,
+  uploadImagesApiRequest,
+  uploadImagesCloudinaryApiRequest,
+  categories,
+  reduxDispatch,
+  newCategory,
+  deleteCategory,
+}) => {
   const [validated, setValidated] = useState(false);
   const [attributesTable, setAttributesTable] = useState([]);
+  const [attributesFromDb, setAttributesFromDb] = useState([]);
   const [images, setImages] = useState(false);
   const [isCreating, setIsCreating] = useState("");
-  const [createProductResponseState, setCreateProductResponseState] = useState({ message: "", error: "" });
+  const [createProductResponseState, setCreateProductResponseState] = useState({
+    message: "",
+    error: "",
+  });
+  const [categoryChoosen, setCategoryChoosen] = useState("Choose category");
+
+  const attrVal = useRef(null);
+  const attrKey = useRef(null);
 
   const navigate = useNavigate();
 
@@ -26,51 +43,77 @@ const CreateProductPageComponent = ({ createProductApiRequest, uploadImagesApiRe
     event.stopPropagation();
     const form = event.currentTarget.elements;
     const formInputs = {
-        name: form.name.value,
-        description: form.description.value,
-        count: form.count.value,
-        price: form.price.value,
-        category: form.category.value,
-        attributesTable: attributesTable
-    }
+      name: form.name.value,
+      description: form.description.value,
+      count: form.count.value,
+      price: form.price.value,
+      category: form.category.value,
+      attributesTable: attributesTable,
+    };
     if (event.currentTarget.checkValidity() === true) {
-      if(images.length > 3){
-        setIsCreating("too many files");
+      if (images.length > 3) {
+        setIsCreating("to many files");
         return;
       }
-        createProductApiRequest(formInputs)
-        .then(data => {
-            if (images) {
-                if (process.env.NODE_ENV !== "production") { //to do: change to !==
-                uploadImagesApiRequest(images, data.productId)
-                .then(res => {})
-                .catch((er) => setIsCreating(er.response.data.message ? er.response.data.message : er.response.data))
-                } else {
-                    uploadImagesCloudinaryApiRequest(images, data.productId);
-                }
+      createProductApiRequest(formInputs)
+        .then((data) => {
+          if (images) {
+            if (process.env.NODE_ENV !== "production") {
+              // to do: change to !==
+              uploadImagesApiRequest(images, data.productId)
+                .then((res) => {})
+                .catch((er) =>
+                  setIsCreating(
+                    er.response.data.message
+                      ? er.response.data.message
+                      : er.response.data
+                  )
+                );
+            } else {
+              uploadImagesCloudinaryApiRequest(images, data.productId);
             }
-            if(data.message==="product created")
-            navigate("/admin/products");
+          }
+          if (data.message === "product created") navigate("/admin/products");
         })
-        .then(data => {
-            setIsCreating("Product is being created....");
-            setTimeout(() => {
-                 setIsCreating("");
-                 if (data.message === "product created") navigate("/admin/products");
-            }, 2000)
-
-        })
-        .catch(er => {
-            setCreateProductResponseState({ error: er.response.data.message ? er.response.data.message : er.response.data });
-        })
+        .catch((er) => {
+          setCreateProductResponseState({
+            error: er.response.data.message
+              ? er.response.data.message
+              : er.response.data,
+          });
+        });
     }
 
     setValidated(true);
   };
 
-    const uploadHandler = (images) => {
-        setImages(images);
+  const uploadHandler = (images) => {
+    setImages(images);
+  };
+
+  const newCategoryHandler = (e) => {
+    if (e.keyCode && e.keyCode === 13 && e.target.value) {
+      reduxDispatch(newCategory(e.target.value));
+      setTimeout(() => {
+        let element = document.getElementById("cats");
+        setCategoryChoosen(e.target.value);
+        element.value = e.target.value;
+        e.target.value = "";
+      }, 200);
     }
+  };
+
+  const deleteCategoryHandler = () => {
+    let element = document.getElementById("cats");
+    reduxDispatch(deleteCategory(element.value));
+    setCategoryChoosen("Choose category");
+  };
+
+  const attributeValueSelected = (e) => {
+      if (e.target.value !== "Choose attribute value") {
+          setAttributesTableWrapper(attrKey.current.value, e.target.value, setAttributesTable);
+      }
+  }
 
   return (
     <Container>
@@ -111,17 +154,29 @@ const CreateProductPageComponent = ({ createProductApiRequest, uploadImagesApiRe
             <Form.Group className="mb-3" controlId="formBasicCategory">
               <Form.Label>
                 Category
-                <CloseButton />(<small>remove selected</small>)
+                <CloseButton onClick={deleteCategoryHandler} />(
+                <small>remove selected</small>)
               </Form.Label>
               <Form.Select
+                id="cats"
                 required
                 name="category"
                 aria-label="Default select example"
+                onChange={(e) =>
+                  changeCategory(
+                    e,
+                    categories,
+                    setAttributesFromDb,
+                    setCategoryChoosen
+                  )
+                }
               >
                 <option value="">Choose category</option>
-                <option value="1">Laptops</option>
-                <option value="2">TV</option>
-                <option value="3">Games</option>
+                {categories.map((category, idx) => (
+                  <option key={idx} value={category.name}>
+                    {category.name}
+                  </option>
+                ))}
               </Form.Select>
             </Form.Group>
 
@@ -129,57 +184,75 @@ const CreateProductPageComponent = ({ createProductApiRequest, uploadImagesApiRe
               <Form.Label>
                 Or create a new category (e.g. Computers/Laptops/Intel){" "}
               </Form.Label>
-              <Form.Control name="newCategory" type="text" />
+              <Form.Control
+                onKeyUp={newCategoryHandler}
+                name="newCategory"
+                type="text"
+              />
             </Form.Group>
 
-            <Row className="mt-5">
-              <Col md={6}>
-                <Form.Group className="mb-3" controlId="formBasicAttributes">
-                  <Form.Label>Choose atrribute and set value</Form.Label>
-                  <Form.Select
-                    name="atrrKey"
-                    aria-label="Default select example"
+            {attributesFromDb.length > 0 && (
+              <Row className="mt-5">
+                <Col md={6}>
+                  <Form.Group className="mb-3" controlId="formBasicAttributes">
+                    <Form.Label>Choose atrribute and set value</Form.Label>
+                    <Form.Select
+                      name="atrrKey"
+                      aria-label="Default select example"
+                      ref={attrKey}
+                      onChange={(e)=>setValuesForAttrFromDbSelectForm(e, attrVal, attributesFromDb)}
+                    >
+                      <option>Choose attribute</option>
+                      {attributesFromDb.map((item, idx) => (
+                        <React.Fragment key={idx}>
+                          <option value={item.key}>{item.key}</option>
+                        </React.Fragment>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group
+                    className="mb-3"
+                    controlId="formBasicAttributeValue"
                   >
-                    <option>Choose attribute</option>
-                    <option value="red">color</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group
-                  className="mb-3"
-                  controlId="formBasicAttributeValue"
-                >
-                  <Form.Label>Attribute value</Form.Label>
-                  <Form.Select
-                    name="atrrVal"
-                    aria-label="Default select example"
-                  >
-                    <option>Choose attribute value</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-            </Row>
+                    <Form.Label>Attribute value</Form.Label>
+                    <Form.Select
+                    onChange={attributeValueSelected}
+                      name="atrrVal"
+                      aria-label="Default select example"
+                      ref={attrVal}
+                    >
+                      <option>Choose attribute value</option>
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+              </Row>
+            )}
 
             <Row>
-              <Table hover>
-                <thead>
-                  <tr>
-                    <th>Attribute</th>
-                    <th>Value</th>
-                    <th>Delete</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>attr key</td>
-                    <td>attr value</td>
-                    <td>
-                      <CloseButton />
-                    </td>
-                  </tr>
-                </tbody>
-              </Table>
+              {attributesTable.length > 0 && (
+                <Table hover>
+                  <thead>
+                    <tr>
+                      <th>Attribute</th>
+                      <th>Value</th>
+                      <th>Delete</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {attributesTable.map((item, idx) => (
+                      <tr key={idx}>
+                        <td>{item.key}</td>
+                        <td>{item.value}</td>
+                        <td>
+                          <CloseButton />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              )}
             </Row>
 
             <Row>
@@ -187,7 +260,7 @@ const CreateProductPageComponent = ({ createProductApiRequest, uploadImagesApiRe
                 <Form.Group className="mb-3" controlId="formBasicNewAttribute">
                   <Form.Label>Create new attribute</Form.Label>
                   <Form.Control
-                    disabled={false}
+                    disabled={["", "Choose category"].includes(categoryChoosen)}
                     placeholder="first choose or create category"
                     name="newAttrValue"
                     type="text"
@@ -201,7 +274,7 @@ const CreateProductPageComponent = ({ createProductApiRequest, uploadImagesApiRe
                 >
                   <Form.Label>Attribute value</Form.Label>
                   <Form.Control
-                    disabled={false}
+                    disabled={["", "Choose category"].includes(categoryChoosen)}
                     placeholder="first choose or create category"
                     required={true}
                     name="newAttrValue"
@@ -219,7 +292,12 @@ const CreateProductPageComponent = ({ createProductApiRequest, uploadImagesApiRe
             <Form.Group controlId="formFileMultiple" className="mb-3 mt-3">
               <Form.Label>Images</Form.Label>
 
-              <Form.Control required type="file" multiple onChange={(e) => uploadHandler(e.target.files)} />
+              <Form.Control
+                required
+                type="file"
+                multiple
+                onChange={(e) => uploadHandler(e.target.files)}
+              />
               {isCreating}
             </Form.Group>
             <Button variant="primary" type="submit">
