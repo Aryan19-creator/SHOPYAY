@@ -11,21 +11,47 @@ const UserChatComponent = () => {
   //       {"admin": "msg"},
   //   ]
   const [chat, setChat] = useState([]);
+  const [messageReceived, setMessageReceived] = useState(false);
+  const [chatConnectionInfo, setChatConnectionInfo] = useState(false);
+  const [reconnect, setReconnect] = useState(false);
 
   const userInfo = useSelector((state) => state.userRegisterLogin.userInfo);
 
   useEffect(() => {
     if (!userInfo.isAdmin) {
+        setReconnect(false);
+         var audio = new Audio("/audio/chat-msg.mp3");
       const socket = socketIOClient();
+      socket.on("no admin", (msg) => {
+          setChat((chat) => {
+              return [...chat, { admin: "no admin here now" }];
+          })
+      })
+      socket.on("server sends message from admin to client", (msg) => {
+          setChat((chat) => {
+              return [...chat, { admin: msg }];
+          })
+          setMessageReceived(true);
+          audio.play();
+          const chatMessages = document.querySelector(".cht-msg");
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+      })
       setSocket(socket);
+      socket.on("admin closed chat", () => {
+         setChat([]); 
+         setChatConnectionInfo("Admin closed chat. Type something and submit to reconnect");
+         setReconnect(true);
+      })
       return () => socket.disconnect();
     }
-  }, [userInfo.isAdmin]);
+  }, [userInfo.isAdmin, reconnect]);
 
   const clientSubmitChatMsg = (e) => {
     if (e.keyCode && e.keyCode !== 13) {
       return;
     }
+    setChatConnectionInfo("");
+    setMessageReceived(false);
     const msg = document.getElementById("clientChatMsg");
     let v = msg.value.trim();
     if (v === "" || v === null || v === false || !v) {
@@ -48,7 +74,8 @@ const UserChatComponent = () => {
       <input type="checkbox" id="check" />
       <label className="chat-btn" htmlFor="check">
         <i className="bi bi-chat-dots comment"></i>
-        <span className="position-absolute top-0 start-10 translate-middle p-2 bg-danger border border-light rounded-circle"></span>
+        {messageReceived && <span className="position-absolute top-0 start-10 translate-middle p-2 bg-danger border border-light rounded-circle"></span>}
+        
         <i className="bi bi-x-circle close"></i>
       </label>
       <div className="chat-wrapper">
@@ -57,6 +84,7 @@ const UserChatComponent = () => {
         </div>
         <div className="chat-form">
           <div className="cht-msg">
+              <p>{chatConnectionInfo}</p>
             {chat.map((item, id) => (
               <div key={id}>
                 {item.client && (
