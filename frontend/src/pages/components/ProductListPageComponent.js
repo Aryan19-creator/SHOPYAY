@@ -94,7 +94,7 @@ const ProductListPageComponent = ({ getProducts, categories }) => {
   const resetFilters = () => {
     setShowResetFiltersButton(false);
     setFilters({});
-    window.location.href = "/product-list";
+    navigate("/product-list");
   };
 
   return (

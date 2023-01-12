@@ -9,7 +9,7 @@ export const setReduxUserState = (userCreated)=>(dispatch)=>{
 }
 
 export const logout=()=>(dispatch)=>{
-    document.location.href="/login";
+    this.props.history.push("/login");
     axios.get('/api/logout')
     localStorage.removeItem("userInfo")
     sessionStorage.removeItem("userInfo")

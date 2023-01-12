@@ -1,11 +1,14 @@
 import { Form } from "react-bootstrap";
 import { useSelector } from "react-redux";
 import { useRef, useState } from "react";
+import { useNavigate} from "react-router-dom";
+
 
 const CategoryFilterComponent = ({ setCategoriesFromFilter }) => {
   const { categories } = useSelector((state) => state.getCategories);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const myRefs = useRef([]);
+  const navigate=useNavigate();
 
   const selectCategory = (e, category, idx) => {
     setCategoriesFromFilter((items) => {
@@ -34,7 +37,7 @@ const CategoryFilterComponent = ({ setCategoriesFromFilter }) => {
              var a = [...old];
              a.pop();
              if (a.length === 0) {
-                window.location.href = "/product-list"; 
+               navigate('/product-list'); 
              }
              return a;
          })
