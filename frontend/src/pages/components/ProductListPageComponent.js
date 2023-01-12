@@ -8,29 +8,32 @@ import CategoryFilterComponent from "../../components/filterQueryResultOptions/C
 import AttributesFilterComponent from "../../components/filterQueryResultOptions/AttributesFilterComponent";
 
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { useLocation } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 
 const ProductListPageComponent = ({ getProducts, categories }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [attrsFilter, setAttrsFilter] = useState([]);//collect category attributes from db and show on webpage
-  const [attrsFromFilter, setAttrsFromFilter] = useState([]);//collect user filters for category attributes
+  const [attrsFilter, setAttrsFilter] = useState([]); // collect category attributes from db and show on the webpage
+  const [attrsFromFilter, setAttrsFromFilter] = useState([]); // collect user filters for category attributes
   const [showResetFiltersButton, setShowResetFiltersButton] = useState(false);
 
-  const [filters, setFilters] = useState({});//collect all filters
+  const [filters, setFilters] = useState({}); // collect all filters
   const [price, setPrice] = useState(500);
   const [ratingsFromFilter, setRatingsFromFilter] = useState({});
   const [categoriesFromFilter, setCategoriesFromFilter] = useState({});
-
+  const [sortOption, setSortOption] = useState("");
 
   const { categoryName } = useParams() || "";
+  const { pageNumParam } = useParams() || "";
+  const { searchQuery } = useParams() || "";
   const location = useLocation();
 
   useEffect(() => {
     if (categoryName) {
-      let categoryAllData = categories.find((item) => item.name === categoryName.replaceAll(",", "/"));
+      let categoryAllData = categories.find(
+        (item) => item.name === categoryName.replaceAll(",", "/")
+      );
       if (categoryAllData) {
         let mainCategory = categoryAllData.name.split("/")[0];
         let index = categories.findIndex((item) => item.name === mainCategory);
@@ -39,13 +42,13 @@ const ProductListPageComponent = ({ getProducts, categories }) => {
     } else {
       setAttrsFilter([]);
     }
-  }, [categoryName, categories])
+  }, [categoryName, categories]);
 
   useEffect(() => {
     if (Object.entries(categoriesFromFilter).length > 0) {
       setAttrsFilter([]);
       var cat = [];
-      var count = 0;
+      var count;
       Object.entries(categoriesFromFilter).forEach(([category, checked]) => {
         if (checked) {
           var name = category.split("/")[0];
@@ -56,14 +59,12 @@ const ProductListPageComponent = ({ getProducts, categories }) => {
             setAttrsFilter((attrs) => [...attrs, ...categories[index].attrs]);
           }
         }
-      })
+      });
     }
-  }, [categoriesFromFilter, categories])
-
-
+  }, [categoriesFromFilter, categories]);
 
   useEffect(() => {
-    getProducts()
+    getProducts(categoryName, pageNumParam, searchQuery, filters, sortOption)
       .then((products) => {
         setProducts(products.products);
         setLoading(false);
@@ -72,23 +73,24 @@ const ProductListPageComponent = ({ getProducts, categories }) => {
         console.log(er);
         setError(true);
       });
-    console.log(filters);
-  }, [filters]);
+
+  }, [categoryName, pageNumParam, searchQuery,filters, sortOption]);
 
   const handleFilters = () => {
     setShowResetFiltersButton(true);
     setFilters({
       price: price,
-      ratingsFromFilter: ratingsFromFilter,
+      rating: ratingsFromFilter,
       category: categoriesFromFilter,
       attrs: attrsFromFilter,
-    })
-  }
+    });
+  };
+
   const resetFilters = () => {
     setShowResetFiltersButton(false);
     setFilters({});
     window.location.href = "/product-list";
-  }
+  };
 
   return (
     <Container fluid>
@@ -96,31 +98,39 @@ const ProductListPageComponent = ({ getProducts, categories }) => {
         <Col md={3}>
           <ListGroup variant="flush">
             <ListGroup.Item className="mb-3 mt-3">
-              <SortOptionsComponent />
+              <SortOptionsComponent setSortOption={setSortOption} />
             </ListGroup.Item>
             <ListGroup.Item>
               FILTER: <br />
               <PriceFilterComponent price={price} setPrice={setPrice} />
             </ListGroup.Item>
             <ListGroup.Item>
-              <RatingFilterComponent setRatingsFromFilter={setRatingsFromFilter} />
+              <RatingFilterComponent
+                setRatingsFromFilter={setRatingsFromFilter}
+              />
             </ListGroup.Item>
             {!location.pathname.match(/\/category/) && (
-              <ListGroup.Item >
-                <CategoryFilterComponent setCategoriesFromFilter={setCategoriesFromFilter} />
+              <ListGroup.Item>
+                <CategoryFilterComponent
+                  setCategoriesFromFilter={setCategoriesFromFilter}
+                />
               </ListGroup.Item>
             )}
-
             <ListGroup.Item>
-              <AttributesFilterComponent attrsFilter={attrsFilter} setAttrsFromFilter={setAttrsFromFilter} />
+              <AttributesFilterComponent
+                attrsFilter={attrsFilter}
+                setAttrsFromFilter={setAttrsFromFilter}
+              />
             </ListGroup.Item>
             <ListGroup.Item>
-              <Button variant="primary" onClick={handleFilters} >Filter</Button>{" "}
+              <Button variant="primary" onClick={handleFilters}>
+                Filter
+              </Button>{" "}
               {showResetFiltersButton && (
-
-                <Button onClick={resetFilters} variant="danger">Reset filters</Button>
+                <Button onClick={resetFilters} variant="danger">
+                  Reset filters
+                </Button>
               )}
-
             </ListGroup.Item>
           </ListGroup>
         </Col>
@@ -146,7 +156,7 @@ const ProductListPageComponent = ({ getProducts, categories }) => {
           <PaginationComponent />
         </Col>
       </Row>
-    </Container >
+    </Container>
   );
 };
 
