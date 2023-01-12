@@ -9,32 +9,58 @@ import AttributesFilterComponent from "../../components/filterQueryResultOptions
 
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 const ProductListPageComponent = ({ getProducts, categories }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [attrsFilter, setAttrsFilter] = useState([]);
-  const [attrsFromFilter, setAttrsFromFilter] = useState([]);
-  const [showResetFiltersButton, setShowResetFiltersButton]=useState(false);
+  const [attrsFilter, setAttrsFilter] = useState([]);//collect category attributes from db and show on webpage
+  const [attrsFromFilter, setAttrsFromFilter] = useState([]);//collect user filters for category attributes
+  const [showResetFiltersButton, setShowResetFiltersButton] = useState(false);
 
-  const [filters, setFilters]=useState({});
-  console.log(filters);
+  const [filters, setFilters] = useState({});//collect all filters
+  const [price, setPrice] = useState(500);
+  const [ratingsFromFilter, setRatingsFromFilter] = useState({});
+  const [categoriesFromFilter, setCategoriesFromFilter] = useState({});
+
 
   const { categoryName } = useParams() || "";
+  const location = useLocation();
 
   useEffect(() => {
-      if (categoryName) {
-          let categoryAllData = categories.find((item) => item.name === categoryName.replaceAll(",", "/"));
-          if (categoryAllData) {
-              let mainCategory = categoryAllData.name.split("/")[0];
-              let index = categories.findIndex((item) => item.name === mainCategory);
-              setAttrsFilter(categories[index].attrs);
-          }
-      } else {
-          setAttrsFilter([]);
+    if (categoryName) {
+      let categoryAllData = categories.find((item) => item.name === categoryName.replaceAll(",", "/"));
+      if (categoryAllData) {
+        let mainCategory = categoryAllData.name.split("/")[0];
+        let index = categories.findIndex((item) => item.name === mainCategory);
+        setAttrsFilter(categories[index].attrs);
       }
+    } else {
+      setAttrsFilter([]);
+    }
   }, [categoryName, categories])
+
+  useEffect(() => {
+    if (Object.entries(categoriesFromFilter).length > 0) {
+      setAttrsFilter([]);
+      var cat = [];
+      var count = 0;
+      Object.entries(categoriesFromFilter).forEach(([category, checked]) => {
+        if (checked) {
+          var name = category.split("/")[0];
+          cat.push(name);
+          count = cat.filter((x) => x === name).length;
+          if (count === 1) {
+            var index = categories.findIndex((item) => item.name === name);
+            setAttrsFilter((attrs) => [...attrs, ...categories[index].attrs]);
+          }
+        }
+      })
+    }
+  }, [categoriesFromFilter, categories])
+
+
 
   useEffect(() => {
     getProducts()
@@ -46,18 +72,22 @@ const ProductListPageComponent = ({ getProducts, categories }) => {
         console.log(er);
         setError(true);
       });
-  }, []);
+    console.log(filters);
+  }, [filters]);
 
-  const handleFilters=()=>{
+  const handleFilters = () => {
     setShowResetFiltersButton(true);
     setFilters({
+      price: price,
+      ratingsFromFilter: ratingsFromFilter,
+      category: categoriesFromFilter,
       attrs: attrsFromFilter,
     })
   }
-  const resetFilters=()=>{
+  const resetFilters = () => {
     setShowResetFiltersButton(false);
     setFilters({});
-    window.location.href="/product-list";
+    window.location.href = "/product-list";
   }
 
   return (
@@ -70,23 +100,27 @@ const ProductListPageComponent = ({ getProducts, categories }) => {
             </ListGroup.Item>
             <ListGroup.Item>
               FILTER: <br />
-              <PriceFilterComponent />
+              <PriceFilterComponent price={price} setPrice={setPrice} />
             </ListGroup.Item>
             <ListGroup.Item>
-              <RatingFilterComponent />
+              <RatingFilterComponent setRatingsFromFilter={setRatingsFromFilter} />
             </ListGroup.Item>
+            {!location.pathname.match(/\/category/) && (
+              <ListGroup.Item >
+                <CategoryFilterComponent setCategoriesFromFilter={setCategoriesFromFilter} />
+              </ListGroup.Item>
+            )}
+
             <ListGroup.Item>
-              <CategoryFilterComponent />
-            </ListGroup.Item>
-            <ListGroup.Item>
-              <AttributesFilterComponent attrsFilter={attrsFilter} setAttrsFromFilter={setAttrsFromFilter}  />
+              <AttributesFilterComponent attrsFilter={attrsFilter} setAttrsFromFilter={setAttrsFromFilter} />
             </ListGroup.Item>
             <ListGroup.Item>
               <Button variant="primary" onClick={handleFilters} >Filter</Button>{" "}
               {showResetFiltersButton && (
+
                 <Button onClick={resetFilters} variant="danger">Reset filters</Button>
               )}
-              
+
             </ListGroup.Item>
           </ListGroup>
         </Col>
@@ -112,7 +146,7 @@ const ProductListPageComponent = ({ getProducts, categories }) => {
           <PaginationComponent />
         </Col>
       </Row>
-    </Container>
+    </Container >
   );
 };
 
