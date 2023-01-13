@@ -11,7 +11,7 @@ export const setReduxUserState = (userCreated)=>(dispatch)=>{
 }
 
 export const logout=()=>(dispatch)=>{
-    window.open('/login', '_blank')
+    setTimeout(function(){document.location.href = "/login"},500);
     axios.get('/api/logout')
     localStorage.removeItem("userInfo")
     sessionStorage.removeItem("userInfo")
