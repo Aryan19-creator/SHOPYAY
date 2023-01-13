@@ -11,8 +11,7 @@ export const setReduxUserState = (userCreated)=>(dispatch)=>{
 }
 
 export const logout=()=>(dispatch)=>{
-    var url="/login";
-    window.top.location=url;
+    document.location.href="/login"
     axios.get('/api/logout')
     localStorage.removeItem("userInfo")
     sessionStorage.removeItem("userInfo")

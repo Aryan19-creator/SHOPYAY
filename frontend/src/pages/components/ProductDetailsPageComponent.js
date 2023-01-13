@@ -13,6 +13,7 @@ import AddedToCartMessageComponent from "../../components/AddedToCartMessageComp
 
 import ImageZoom from "js-image-zoom";
 import { useEffect, useState, useRef } from "react";
+import MetaComponent from "../../components/MetaComponent";
 
 import { useParams } from "react-router-dom";
 
@@ -31,12 +32,20 @@ const ProductDetailsPageComponent = ({
   const [error, setError] = useState(false);
   const [productReviewed, setProductReviewed] = useState(false);
 
-  const messagesEndRef=useRef(null);
+  const messagesEndRef = useRef(null);
 
   const addToCartHandler = () => {
     reduxDispatch(addToCartReduxAction(id, quantity));
     setShowCartMessage(true);
   };
+
+  useEffect(() => {
+    if (productReviewed) {
+        setTimeout(() => {
+             messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }, 200)
+    }  
+  }, [productReviewed])
 
   useEffect(() => {
     if (product.images) {
@@ -55,14 +64,6 @@ const ProductDetailsPageComponent = ({
       );
     }
   });
-
-  useEffect(()=>{
-    if(productReviewed){
-      setTimeout(()=>{
-        messagesEndRef.current.scrollIntoView({behavior: "smooth"});
-      }, 200)
-    }
-  },[productReviewed])
 
   useEffect(() => {
     getProductDetails(id)
@@ -86,17 +87,19 @@ const ProductDetailsPageComponent = ({
      }
      if (e.currentTarget.checkValidity() === true) {
          writeReviewApiRequest(product._id, formInputs)
-         .then(data=>{
-          if(data==="review created"){
-            setProductReviewed("You successfully reviewed the page");
-          }
+         .then(data => {
+             if (data === "review created") {
+                 setProductReviewed("You successfuly reviewed the page!");
+             }
          })
-         .catch((er)=>setProductReviewed(er.response.data.message?er.response.data.message:er.response.data));
+         .catch((er) => setProductReviewed(er.response.data.message ? er.response.data.message : er.response.data));
      }
   }
 
   return (
-    <Container>
+      <>
+      <MetaComponent title={product.name} description={product.description}/>
+      <Container>
       <AddedToCartMessageComponent
         showCartMessage={showCartMessage}
         setShowCartMessage={setShowCartMessage}
@@ -215,7 +218,7 @@ const ProductDetailsPageComponent = ({
                 </Form.Select>
                 <Button disabled={!userInfo.name} type="submit" className="mb-3 mt-3" variant="primary">
                   Submit
-                </Button>
+                </Button>{" "}
                 {productReviewed}
               </Form>
             </Col>
@@ -223,6 +226,8 @@ const ProductDetailsPageComponent = ({
         )}
       </Row>
     </Container>
+      </>
+    
   );
 };
 
