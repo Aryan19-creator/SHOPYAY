@@ -1,6 +1,6 @@
 import { LOGIN_USER, LOGOUT_USER } from "../constants/userConstants";
 import axios from "axios";
-import { useNavigation } from "react-router-dom";
+
 
 
 export const setReduxUserState = (userCreated)=>(dispatch)=>{
@@ -11,8 +11,7 @@ export const setReduxUserState = (userCreated)=>(dispatch)=>{
 }
 
 export const logout=()=>(dispatch)=>{
-    const navigate=useNavigation();
-    navigate("/login");
+    document.location.href="/login"
     axios.get('/api/logout')
     localStorage.removeItem("userInfo")
     sessionStorage.removeItem("userInfo")
